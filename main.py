@@ -1,5 +1,6 @@
 """Este arquivo contém tabelas para um banco de dados de gerenciamento de pedidos"""
 import sqlite3
+import pandas as pd
 
 conn = sqlite3.connect('empresa_abc.db')
 c = conn.cursor()
@@ -129,4 +130,24 @@ c.executemany("INSERT INTO Pedidos (ID_Pedido, ID_Cliente, Data_Pedido) VALUES (
 c.executemany("INSERT INTO Detalhes_Pedido (ID_Pedido, ID_Produto, Quantidade) VALUES (?, ?, ?)", dados_detalhes_pedido)
 
 conn.commit()
+
+#Análise de Clientes
+# a. Quais são os top 5 países em número de clientes?
+clientes_por_pais = pd.read_sql_query("SELECT Pais, COUNT(*) as Numero_de_Clientes FROM Clientes GROUP BY Pais ORDER BY Numero_de_Clientes DESC LIMIT 5", conn)
+
+# b. Quantos clientes únicos realizaram mais de um pedido?
+clientes_multiplos_pedidos = pd.read_sql_query("SELECT COUNT(DISTINCT ID_Cliente) as Num_Clientes_Multiplos FROM Pedidos GROUP BY ID_Cliente HAVING COUNT(*) > 1", conn)
+
+# c. Qual é o valor médio de pedidos por cliente em cada país?
+valor_medio_por_cliente_pais = pd.read_sql_query("SELECT Pais, AVG(Num_Pedidos) as Valor_Medio_Pedidos FROM (SELECT C.Pais, COUNT(P.ID_Pedido) as Num_Pedidos FROM Clientes C JOIN Pedidos P ON C.ID_Cliente = P.ID_Cliente GROUP BY C.Pais, P.ID_Cliente) GROUP BY Pais", conn)
+
+# d. Quais são os 3 principais clientes em termos de valor total de pedidos?
+top_clientes = pd.read_sql_query("SELECT ID_Cliente, COUNT(*) as Num_Pedidos FROM Pedidos GROUP BY ID_Cliente ORDER BY Num_Pedidos DESC LIMIT 3", conn)
+
+print("Os 5 principais países em número de clientes:\n", clientes_por_pais)
+print("Número de clientes únicos que farão mais de um pedido:", len(clientes_multiplos_pedidos))
+print("Valor médio de pedidos por cliente em cada país:\n", valor_medio_por_cliente_pais)
+print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes)
+
+
 conn.close()
