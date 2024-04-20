@@ -191,4 +191,54 @@ top_clientes = pd.read_sql_query("SELECT ID_Cliente, COUNT(*) as Num_Pedidos FRO
 
 **print("Valor médio de pedidos por cliente em cada país:\n", valor_medio_por_cliente_pais) --> Cada cliente em cada país fez exatamente um pedido, então o valor médio é 1.0**
 
-**print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes) --> Como nos dados de teste cada cliente tem apenas um pedido, o número de pedidos por cliente é 1 para todos. Isso indica que os três principais clientes em termos de valor total do pedido são clientes com ID 1, 2 e 3.**
+**print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes) --> Como nos dados de teste cada cliente tem apenas um pedido, o número de pedidos por cliente é 1 para todos. Isso indica que os três principais clientes em termos de valor total do pedido são clientes com ID 1, 2 e 3**
+
+
+### Análise de Produtos
+### a. Quais são as top 5 categorias de produtos mais vendidas?
+top_categorias = pd.read_sql_query("""
+    SELECT Categoria, COUNT(*) as Num_Vendas 
+    FROM Produtos 
+    GROUP BY Categoria 
+    ORDER BY Num_Vendas DESC 
+    LIMIT 5
+    """, conn)
+
+### b. Qual é o produto mais caro que foi vendido?
+produto_mais_caro = pd.read_sql_query("""
+    SELECT Nome_Produto, Preco 
+    FROM Produtos 
+    ORDER BY Preco DESC 
+    LIMIT 1
+    """, conn)
+
+### c. Qual categoria de produto gera a maior receita?
+categoria_maior_receita = pd.read_sql_query("""
+    SELECT Categoria, SUM(Preco * Quantidade) as Receita
+    FROM Produtos
+    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+    GROUP BY Categoria
+    ORDER BY Receita DESC
+    LIMIT 1
+    """, conn)
+
+### d. Quais são os top 3 produtos mais vendidos?
+top_produtos_vendidos = pd.read_sql_query("""
+    SELECT Nome_Produto, COUNT(*) as Num_Vendas
+    FROM Produtos
+    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+    GROUP BY Produtos.ID_Produto
+    ORDER BY Num_Vendas DESC
+    LIMIT 3
+    """, conn)
+
+**print("As top 5 categorias de produtos mais vendidas:\n", top_categorias) --> Vestuário 11, Calçados 9 e Acessórios 5**
+
+**print("O produto mais caro que foi vendido:\n", produto_mais_caro) --> Tênis 50.00**
+
+**print("A categoria de produto que gera a maior receita:\n", categoria_maior_receita) --> Vestuário  315.00**
+
+**print("Os top 3 produtos mais vendidos:\n", top_produtos_vendidos) --> Camisa 11, Tênis 9 e Calça Jeans  7**
+
+
+
