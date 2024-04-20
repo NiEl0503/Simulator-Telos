@@ -237,4 +237,55 @@ print("O valor médio de um pedido:\n", valor_meio_pedido)
 print("Os dias da semana com mais pedidos?:\n", dia_semana_pedidos)
 print("País com o maior número de pedidos:\n", pais_maior_pedidos)
 
+#Análise de Tendências de Vendas
+#a. Como as vendas de cada categoria de produto mudaram ao longo do ano?
+vendas_por_categoria = pd.read_sql_query ("""
+   SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
+   FROM Pedidos P
+   JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+   JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+   GROUP BY Mes, Pr.Categoria
+   ORDER BY Mes, Pr.Categoria
+""", conn)
+
+#b. Existe alguma correlação entre o país do cliente e a categoria de produto comprada?
+correlacao_pais_categoria = pd.read_sql_query("""
+    SELECT C.Pais, Pr.Categoria, COUNT(*) AS Total
+    FROM Clientes C
+    JOIN Pedidos P ON C.ID_Cliente = P.ID_Cliente
+    JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+    JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+    GROUP BY C.Pais, Pr.Categoria
+    """, conn)
+
+#c. Como o valor médio do pedido varia por mês?
+valor_medio_por_mes = pd.read_sql_query("""
+   SELECT strftime('%m', P.Data_Pedido) AS Mes, AVG(Total_Pedido) AS Valor_Medio_Pedido
+   FROM (
+      SELECT DP.ID_Pedido, SUM(Pr.Preco * DP.Quantidade) AS Total_Pedido
+      FROM Pedidos P
+      JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+      JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+      GROUP BY DP.ID_Pedido
+   ) AS Subquery
+   JOIN Pedidos P ON Subquery.ID_Pedido = P.ID_Pedido
+   GROUP BY Mes
+   ORDER BY Mes
+""", conn)
+
+#d. Qual categoria de produto mostra a maior variação de vendas entre os meses?
+vendas_por_categoria = pd.read_sql_query("""
+SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
+   FROM Pedidos P
+   JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+   JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+   GROUP BY Mes, Pr.Categoria
+   ORDER BY Mes, Pr.Categoria
+""", conn)
+
+print("Vendas por categoria:\n", vendas_por_categoria)
+print("Correlação entre o país do cliente e a categoria de produto comprada:\n",correlacao_pais_categoria)
+print("Valor médio do pedido varia por mês:\n", valor_medio_por_mes)
+print("Categoria de produto com maior variação de vendas:\n",vendas_por_categoria )
+
 conn.close()
