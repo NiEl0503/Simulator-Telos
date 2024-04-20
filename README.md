@@ -386,3 +386,99 @@ SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS
 **print("Categoria de produto com maior variação de vendas:\n",variacao_vendas_por_categoria) -->  a categoria de produto que mostra a maior variação de vendas entre os meses é "Vestuário"
 Mes  Categoria  Total_Vendas
 05  Vestuário            16**
+
+### Insights e Oportunidades
+
+### a. Identifique os produtos que têm alta demanda, mas baixa disponibilidade em estoque.
+
+produtos_alta_demanda_baixo_estoque = pd.read_sql_query("""
+   SELECT p.Nome_Produto, p.Categoria, SUM(dp.Quantidade) AS Total_Vendido, p.Preco, 
+      (SELECT COUNT(*) FROM Detalhes_Pedido WHERE ID_Produto = p.ID_Produto) AS Total_Encomendado
+   FROM Produtos p
+   JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
+   GROUP BY p.ID_Produto
+   HAVING Total_Vendido > Total_Encomendado
+   """, conn)
+
+
+### b. Quais são os países com maior potencial de expansão de mercado com base nos dados de vendas?
+
+expansao_mercado_paises = pd.read_sql_query("""
+   SELECT c.Pais, COUNT(DISTINCT pe.ID_Cliente) AS Clientes, COUNT(*) AS Total_Pedidos
+   FROM Clientes c
+   JOIN Pedidos pe ON c.ID_Cliente = pe.ID_Cliente
+   GROUP BY c.Pais
+   ORDER BY Total_Pedidos DESC
+   """, conn)
+
+### c. Analise a eficácia das promoções em termos de aumento no número de pedidos.
+
+
+### d. Identifique padrões de compra recorrentes entre clientes.
+
+eficacia_promocoes = pd.read_sql_query("""
+   SELECT c.Nome, p.Nome_Produto, COUNT(*) AS Total_Pedidos 
+   FROM Clientes c
+   JOIN Pedidos pe ON c.ID_Cliente = pe.ID_Cliente
+   JOIN Detalhes_Pedido dp ON pe.ID_Pedido = dp.ID_Pedido
+   JOIN Produtos p ON dp.ID_Produto = p.ID_Produto
+   GROUP BY c.Nome, p.Nome_Produto
+   ORDER BY Total_Pedidos DESC
+   """, conn)
+
+**print("produtos que têm alta demanda, mas baixa disponibilidade em estoque:\n", produtos_alta_demanda_baixo_estoque) -->
+Nome_Produto   Categoria                Total_Vendido        Preco              Total_Encomendado
+ Camisa         Vestuário                  9                  20.0                  5
+Tênis           Calçados                   9                  50.0                  5
+Calça Jeans      Vestuário                 7                  30.0                  5
+Óculos de Sol    Acessórios               10                  25.0                  5**
+
+
+**print(" países com maior potencial de expansão de mercado:\n",expansao_mercado_paises) --> neste caso, tudo de acordo com os dados de teste
+            Pais  Clientes  Total_Pedidos
+0           Índia         1              1
+1         Ucrânia         1              1
+2          Rússia         1              1
+3     Reino Unido         1              1
+4        Portugal         1              1
+5         Polônia         1              1
+6       Paquistão         1              1
+7          México         1              1
+8           Japão         1              1
+9          Itália         1              1
+10         França         1              1
+11        Espanha         1              1
+12          Egito         1              1
+13            EUA         1              1
+14  Coreia do Sul         1              1
+15       Colômbia         1              1
+16          China         1              1
+17         Brasil         1              1
+18      Argentina         1              1
+19       Alemanha         1              1**
+
+#print(":\n", )
+
+
+**print(": padrões de compra recorrentes entre clientes\n",eficacia_promocoes) --> neste caso, tudo de acordo com os dados de teste
+                 Nome   Nome_Produto  Total_Pedidos
+0        Aliyah Khan          Tênis              1
+1        Anna Müller  Óculos de Sol              1
+2         Anna Novak         Camisa              1
+3      Carlos Santos    Calça Jeans              1
+4           Chen Wei  Óculos de Sol              1
+5      Elena Ivanova  Óculos de Sol              1
+6        Emily Smith          Tênis              1
+7        Fatima Khan  Óculos de Sol              1
+8     Giuseppe Rossi    Calça Jeans              1
+9      Haruto Tanaka         Camisa              1
+10   Javier Martinez         Camisa              1
+11        John Smith    Calça Jeans              1
+12        João Silva         Camisa              1
+13        Kim Min-ji  Óculos de Sol              1
+14    Luis Fernández         Camisa              1
+15      Maria Garcia          Tênis              1
+16  Miguel Rodríguez    Calça Jeans              1
+17      Mohammed Ali    Calça Jeans              1
+18      Olga Petrova          Tênis              1
+19     Sophie Dupont          Tênis              1**
