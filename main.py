@@ -163,37 +163,78 @@ LIMIT 5;
 # b. Qual é o produto mais caro que foi vendido?
 produto_mais_caro = pd.read_sql_query("""
    SELECT p.Nome_Produto
-    FROM Produtos p
-    JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
-    GROUP BY p.ID_Produto
-    ORDER BY MAX(p.Preco) DESC
-    LIMIT 1;
-    """, conn)
+   FROM Produtos p
+   JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
+   GROUP BY p.ID_Produto
+   ORDER BY MAX(p.Preco) DESC
+   LIMIT 1;
+   """, conn)
 
 # c. Qual categoria de produto gera a maior receita?
 categoria_maior_receita = pd.read_sql_query("""
-    SELECT Categoria, SUM(Preco * Quantidade) as Receita
-    FROM Produtos
-    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
-    GROUP BY Categoria
-    ORDER BY Receita DESC
-    LIMIT 1
-    """, conn)
+   SELECT Categoria, SUM(Preco * Quantidade) as Receita
+   FROM Produtos
+   JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+   GROUP BY Categoria
+   ORDER BY Receita DESC
+   LIMIT 1
+   """, conn)
 
 # d. Quais são os top 3 produtos mais vendidos?
 top_produtos_vendidos = pd.read_sql_query("""
-    SELECT Nome_Produto, SUM(Quantidade) AS Total_Vendas
-FROM Produtos
-JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
-GROUP BY Produtos.ID_Produto
-ORDER BY Total_Vendas DESC
-LIMIT 3;
-
-    """, conn)
+   SELECT Nome_Produto, SUM(Quantidade) AS Total_Vendas
+   FROM Produtos
+   JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+   GROUP BY Produtos.ID_Produto
+   ORDER BY Total_Vendas DESC
+   LIMIT 3
+   """, conn)
 
 print("As top 5 categorias de produtos mais vendidas:\n", top_categorias)
 print("O produto mais caro que foi vendido:\n", produto_mais_caro)
 print("A categoria de produto que gera a maior receita:\n", categoria_maior_receita)
 print("Os top 3 produtos mais vendidos:\n", top_produtos_vendidos)
+
+#Análise de Pedidos
+#a. Qual é o número total de pedidos realizados por mês?
+total_pedidos_mes = pd.read_sql_query("""
+   SELECT strftime('%m', Data_Pedido) AS Mes, COUNT(*) AS Total_Pedidos
+   FROM Pedidos
+   GROUP BY Mes
+   """, conn)
+#b. Qual é o valor médio de um pedido?
+valor_meio_pedido = pd.read_sql_query("""
+   SELECT AVG(Preco_Total) AS Valor_Medio_Pedido
+   FROM (
+    SELECT ID_Pedido, SUM(Preco * Quantidade) AS Preco_Total
+   FROM Produtos
+   JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+   GROUP BY ID_Pedido
+   );                                   
+   """, conn)
+
+#c. Quais são os dias da semana com mais pedidos?
+dia_semana_pedidos = pd.read_sql_query("""
+   SELECT strftime('%w', Data_Pedido) AS Dia_Semana, COUNT(*) AS Total_Pedidos
+   FROM Pedidos
+   GROUP BY Dia_Semana
+   ORDER BY Total_Pedidos DESC
+   LIMIT 1
+   """, conn)
+
+#d. Qual é o país com o maior número de pedidos?
+pais_maior_pedidos = pd.read_sql_query("""
+   SELECT c.Pais, COUNT(*) AS Total_Pedidos
+   FROM Pedidos p
+   JOIN Clientes c ON p.ID_Cliente = c.ID_Cliente
+   GROUP BY c.Pais
+   ORDER BY Total_Pedidos DESC
+   LIMIT 1
+   """, conn)
+
+print("O número total de pedidos realizados por mês:\n", total_pedidos_mes)
+print("O valor médio de um pedido:\n", valor_meio_pedido)
+print("Os dias da semana com mais pedidos?:\n", dia_semana_pedidos)
+print("País com o maior número de pedidos:\n", pais_maior_pedidos)
 
 conn.close()
