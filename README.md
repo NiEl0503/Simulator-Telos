@@ -185,31 +185,35 @@ valor_medio_por_cliente_pais = pd.read_sql_query("SELECT Pais, AVG(Num_Pedidos) 
 top_clientes = pd.read_sql_query("SELECT ID_Cliente, COUNT(*) as Num_Pedidos FROM Pedidos GROUP BY ID_Cliente ORDER BY Num_Pedidos DESC LIMIT 3", conn)
 
 
-**print("Os 5 principais países em número de clientes:\n", clientes_por_pais)  --> Como cada país possui apenas um cliente de acordo com os dados de teste, a consulta SQL contou o número de clientes de cada país e a lista mostrou os 5 primeiros países ordenados pelo número de clientes Brasil: 1, Espanha: 1, EUA: 1, Alemanha: 1, Argentina: 1**
+**print("Os 5 principais países em número de clientes:\n", clientes_por_pais)  --> Como cada país possui apenas um cliente de acordo com os dados de teste, a consulta SQL contou o número de clientes de cada país 
+ Índia: 1, Ucrânia: 1, Rússia: 1, Reino Unido: 1 e Portugal: 1**
 
 **print("Número de clientes únicos que farão mais de um pedido:", len(clientes_multiplos_pedidos)) --> Como cada cliente tem apenas um pedido nos dados de teste, a consulta não encontrará nenhum cliente que tenha feito mais de um pedido**
 
 **print("Valor médio de pedidos por cliente em cada país:\n", valor_medio_por_cliente_pais) --> Cada cliente em cada país fez exatamente um pedido, então o valor médio é 1.0**
 
-**print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes) --> Como nos dados de teste cada cliente tem apenas um pedido, o número de pedidos por cliente é 1 para todos. Isso indica que os três principais clientes em termos de valor total do pedido são clientes com ID 1, 2 e 3**
+**print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes) --> Como nos dados de teste cada cliente tem apenas um pedido, o número de pedidos por cliente é 1 para todos.**
 
 
 ### Análise de Produtos
 ### a. Quais são as top 5 categorias de produtos mais vendidas?
 top_categorias = pd.read_sql_query("""
-    SELECT Categoria, COUNT(*) as Num_Vendas 
-    FROM Produtos 
-    GROUP BY Categoria 
-    ORDER BY Num_Vendas DESC 
-    LIMIT 5
-    """, conn)
+   SELECT Categoria, SUM(Quantidade) AS Total_Vendas
+FROM Produtos
+JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+GROUP BY Categoria
+ORDER BY Total_Vendas DESC
+LIMIT 5;
+   """, conn)
 
 ### b. Qual é o produto mais caro que foi vendido?
 produto_mais_caro = pd.read_sql_query("""
-    SELECT Nome_Produto, Preco 
-    FROM Produtos 
-    ORDER BY Preco DESC 
-    LIMIT 1
+   SELECT p.Nome_Produto
+    FROM Produtos p
+    JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
+    GROUP BY p.ID_Produto
+    ORDER BY MAX(p.Preco) DESC
+    LIMIT 1;
     """, conn)
 
 ### c. Qual categoria de produto gera a maior receita?
@@ -224,21 +228,19 @@ categoria_maior_receita = pd.read_sql_query("""
 
 ### d. Quais são os top 3 produtos mais vendidos?
 top_produtos_vendidos = pd.read_sql_query("""
-    SELECT Nome_Produto, COUNT(*) as Num_Vendas
-    FROM Produtos
-    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
-    GROUP BY Produtos.ID_Produto
-    ORDER BY Num_Vendas DESC
-    LIMIT 3
+    SELECT Nome_Produto, SUM(Quantidade) AS Total_Vendas
+   FROM Produtos
+   JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+   GROUP BY Produtos.ID_Produto
+   ORDER BY Total_Vendas DESC
+   LIMIT 3;
+
     """, conn)
 
-**print("As top 5 categorias de produtos mais vendidas:\n", top_categorias) --> Vestuário 11, Calçados 9 e Acessórios 5**
+**print("As top 5 categorias de produtos mais vendidas:\n", top_categorias) --> Vestuário 16, Acessórios 10 e  Calçados 9**
 
-**print("O produto mais caro que foi vendido:\n", produto_mais_caro) --> Tênis 50.00**
+**print("O produto mais caro que foi vendido:\n", produto_mais_caro) --> Tênis**
 
-**print("A categoria de produto que gera a maior receita:\n", categoria_maior_receita) --> Vestuário  315.00**
+**print("A categoria de produto que gera a maior receita:\n", categoria_maior_receita) --> Calçados 450.0**
 
-**print("Os top 3 produtos mais vendidos:\n", top_produtos_vendidos) --> Camisa 11, Tênis 9 e Calça Jeans  7**
-
-
-
+**print("Os top 3 produtos mais vendidos:\n", top_produtos_vendidos) --> Óculos de Sol 10, Tênis 9 e  Camisa 9**
