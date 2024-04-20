@@ -294,3 +294,95 @@ pais_maior_pedidos = pd.read_sql_query("""
 **print("Os dias da semana com mais pedidos?:\n", dia_semana_pedidos) --> dia 6: 3**
 
 **print("País com o maior número de pedidos:\n", pais_maior_pedidos) --> Índia 1 -- tendo em conta que todos os países têm o mesmo número de pedidos**
+
+
+### Análise de Tendências de Vendas
+
+### a. Como as vendas de cada categoria de produto mudaram ao longo do ano?
+
+vendas_por_categoria = pd.read_sql_query ("""
+   SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
+   FROM Pedidos P
+   JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+   JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+   GROUP BY Mes, Pr.Categoria
+   ORDER BY Mes, Pr.Categoria
+""", conn)
+
+### b. Existe alguma correlação entre o país do cliente e a categoria de produto comprada?
+
+correlacao_pais_categoria = pd.read_sql_query("""
+    SELECT C.Pais, Pr.Categoria, COUNT(*) AS Total
+    FROM Clientes C
+    JOIN Pedidos P ON C.ID_Cliente = P.ID_Cliente
+    JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+    JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+    GROUP BY C.Pais, Pr.Categoria
+    """, conn)
+
+### c. Como o valor médio do pedido varia por mês?
+
+valor_medio_por_mes = pd.read_sql_query("""
+   SELECT strftime('%m', P.Data_Pedido) AS Mes, AVG(Total_Pedido) AS Valor_Medio_Pedido
+   FROM (
+      SELECT DP.ID_Pedido, SUM(Pr.Preco * DP.Quantidade) AS Total_Pedido
+      FROM Pedidos P
+      JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+      JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+      GROUP BY DP.ID_Pedido
+   ) AS Subquery
+   JOIN Pedidos P ON Subquery.ID_Pedido = P.ID_Pedido
+   GROUP BY Mes
+   ORDER BY Mes
+""", conn)
+
+### d. Qual categoria de produto mostra a maior variação de vendas entre os meses?
+
+vendas_por_categoria = pd.read_sql_query("""
+SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
+   FROM Pedidos P
+   JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+   JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+   GROUP BY Mes, Pr.Categoria
+   ORDER BY Mes, Pr.Categoria
+""", conn)
+
+**print("Vendas por categoria:\n", vendas_por_categoria) --> As vendas de cada categoria de produto ao longo do ano mostram uma variação significativa. No mês 04, a categoria "Vestuário" teve o maior número de vendas, seguida por "Acessórios" e "Calçados". No mês 05, houve uma redução nas vendas em todas as categorias, com "Acessórios" mantendo o maior número de vendas, seguido por "Calçados" e "Vestuário".
+0  04  Acessórios             7
+1  04    Calçados             7
+2  04   Vestuário            14
+3  05  Acessórios             3
+4  05    Calçados             2
+5  05   Vestuário             2**
+
+**print("Correlação entre o país do cliente e a categoria de produto comprada:\n",correlacao_pais_categoria) -->  Cada país tem pelo menos uma compra em diferentes categorias de produtos, sem padrões óbvios de preferência por categoria de produto com base no país do cliente
+            Pais     Categoria  Total
+0        Alemanha  Acessórios      1
+1       Argentina   Vestuário      1
+2          Brasil   Vestuário      1
+3           China  Acessórios      1
+4        Colômbia   Vestuário      1
+5   Coreia do Sul  Acessórios      1
+6             EUA   Vestuário      1
+7           Egito   Vestuário      1
+8         Espanha    Calçados      1
+9          França    Calçados      1
+10         Itália   Vestuário      1
+11          Japão   Vestuário      1
+12         México   Vestuário      1
+13      Paquistão  Acessórios      1
+14        Polônia   Vestuário      1
+15       Portugal   Vestuário      1
+16    Reino Unido    Calçados      1
+17         Rússia    Calçados      1
+18        Ucrânia  Acessórios      1
+19          Índia    Calçados      1**
+
+**print("Valor médio do pedido varia por mês:\n", valor_medio_por_mes) --> Em abril, o valor médio do pedido foi de aproximadamente $54,06, enquanto em maio aumentou para cerca de $56,25.
+ Mes  Valor_Medio_Pedido
+0  04             54.0625
+1  05             56.2500**
+
+**print("Categoria de produto com maior variação de vendas:\n",variacao_vendas_por_categoria) -->  a categoria de produto que mostra a maior variação de vendas entre os meses é "Vestuário"
+Mes  Categoria  Total_Vendas
+05  Vestuário            16**
