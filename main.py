@@ -292,6 +292,44 @@ print("Correlação entre o país do cliente e a categoria de produto comprada:\
 print("Valor médio do pedido varia por mês:\n", valor_medio_por_mes)
 print("Categoria de produto com maior variação de vendas:\n",variacao_vendas_por_categoria)
 
+#Insights e Oportunidades
+#a. Identifique os produtos que têm alta demanda, mas baixa disponibilidade em estoque.
+produtos_alta_demanda_baixo_estoque = pd.read_sql_query("""
+   SELECT p.Nome_Produto, p.Categoria, SUM(dp.Quantidade) AS Total_Vendido, p.Preco, 
+      (SELECT COUNT(*) FROM Detalhes_Pedido WHERE ID_Produto = p.ID_Produto) AS Total_Encomendado
+   FROM Produtos p
+   JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
+   GROUP BY p.ID_Produto
+   HAVING Total_Vendido > Total_Encomendado
+   """, conn)
 
+
+#b. Quais são os países com maior potencial de expansão de mercado com base nos dados de vendas?
+expansao_mercado_paises = pd.read_sql_query("""
+   SELECT c.Pais, COUNT(DISTINCT pe.ID_Cliente) AS Clientes, COUNT(*) AS Total_Pedidos
+   FROM Clientes c
+   JOIN Pedidos pe ON c.ID_Cliente = pe.ID_Cliente
+   GROUP BY c.Pais
+   ORDER BY Total_Pedidos DESC
+   """, conn)
+
+#c. Analise a eficácia das promoções em termos de aumento no número de pedidos.
+
+
+#d. Identifique padrões de compra recorrentes entre clientes.
+eficacia_promocoes = pd.read_sql_query("""
+   SELECT c.Nome, p.Nome_Produto, COUNT(*) AS Total_Pedidos 
+   FROM Clientes c
+   JOIN Pedidos pe ON c.ID_Cliente = pe.ID_Cliente
+   JOIN Detalhes_Pedido dp ON pe.ID_Pedido = dp.ID_Pedido
+   JOIN Produtos p ON dp.ID_Produto = p.ID_Produto
+   GROUP BY c.Nome, p.Nome_Produto
+   ORDER BY Total_Pedidos DESC
+   """, conn)
+
+print("produtos que têm alta demanda, mas baixa disponibilidade em estoque:\n", produtos_alta_demanda_baixo_estoque)
+print(" países com maior potencial de expansão de mercado:\n",expansao_mercado_paises)
+# print(":\n", )
+print(": padrões de compra recorrentes entre clientes\n",eficacia_promocoes)
 
 conn.close()
