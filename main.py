@@ -149,5 +149,47 @@ print("Número de clientes únicos que farão mais de um pedido:", len(clientes_
 print("Valor médio de pedidos por cliente em cada país:\n", valor_medio_por_cliente_pais)
 print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_clientes)
 
+#Análise de Produtos
+# a. Quais são as top 5 categorias de produtos mais vendidas?
+top_categorias = pd.read_sql_query("""
+    SELECT Categoria, COUNT(*) as Num_Vendas 
+    FROM Produtos 
+    GROUP BY Categoria 
+    ORDER BY Num_Vendas DESC 
+    LIMIT 5
+    """, conn)
+
+# b. Qual é o produto mais caro que foi vendido?
+produto_mais_caro = pd.read_sql_query("""
+    SELECT Nome_Produto, Preco 
+    FROM Produtos 
+    ORDER BY Preco DESC 
+    LIMIT 1
+    """, conn)
+
+# c. Qual categoria de produto gera a maior receita?
+categoria_maior_receita = pd.read_sql_query("""
+    SELECT Categoria, SUM(Preco * Quantidade) as Receita
+    FROM Produtos
+    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+    GROUP BY Categoria
+    ORDER BY Receita DESC
+    LIMIT 1
+    """, conn)
+
+# d. Quais são os top 3 produtos mais vendidos?
+top_produtos_vendidos = pd.read_sql_query("""
+    SELECT Nome_Produto, COUNT(*) as Num_Vendas
+    FROM Produtos
+    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+    GROUP BY Produtos.ID_Produto
+    ORDER BY Num_Vendas DESC
+    LIMIT 3
+    """, conn)
+
+print("As top 5 categorias de produtos mais vendidas:\n", top_categorias)
+print("O produto mais caro que foi vendido:\n", produto_mais_caro)
+print("A categoria de produto que gera a maior receita:\n", categoria_maior_receita)
+print("Os top 3 produtos mais vendidos:\n", top_produtos_vendidos)
 
 conn.close()
