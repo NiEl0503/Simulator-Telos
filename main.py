@@ -152,19 +152,21 @@ print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_cli
 #Análise de Produtos
 # a. Quais são as top 5 categorias de produtos mais vendidas?
 top_categorias = pd.read_sql_query("""
-    SELECT Categoria, COUNT(*) as Num_Vendas 
-    FROM Produtos 
-    GROUP BY Categoria 
-    ORDER BY Num_Vendas DESC 
-    LIMIT 5
-    """, conn)
+   SELECT Categoria, COUNT(*) as Num_Vendas 
+   FROM Produtos 
+   GROUP BY Categoria 
+   ORDER BY Num_Vendas DESC 
+   LIMIT 5
+   """, conn)
 
 # b. Qual é o produto mais caro que foi vendido?
 produto_mais_caro = pd.read_sql_query("""
-    SELECT Nome_Produto, Preco 
-    FROM Produtos 
-    ORDER BY Preco DESC 
-    LIMIT 1
+   SELECT p.Nome_Produto
+    FROM Produtos p
+    JOIN Detalhes_Pedido dp ON p.ID_Produto = dp.ID_Produto
+    GROUP BY p.ID_Produto
+    ORDER BY MAX(p.Preco) DESC
+    LIMIT 1;
     """, conn)
 
 # c. Qual categoria de produto gera a maior receita?
