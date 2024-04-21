@@ -260,11 +260,10 @@ correlacao_pais_categoria = pd.read_sql_query("""
 
 #c. Como o valor médio do pedido varia por mês?
 valor_medio_por_mes = pd.read_sql_query("""
-   SELECT strftime('%m', P.Data_Pedido) AS Mes, AVG(Total_Pedido) AS Valor_Medio_Pedido
+   SELECT strftime('%m', P.Data_Pedido) AS Mes, AVG(Subquery.Total_Pedido) AS Valor_Medio_Pedido
    FROM (
       SELECT DP.ID_Pedido, SUM(Pr.Preco * DP.Quantidade) AS Total_Pedido
-      FROM Pedidos P
-      JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+      FROM Detalhes_Pedido DP
       JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
       GROUP BY DP.ID_Pedido
    ) AS Subquery
@@ -274,18 +273,25 @@ valor_medio_por_mes = pd.read_sql_query("""
 """, conn)
 
 #d. Qual categoria de produto mostra a maior variação de vendas entre os meses?
-vendas_por_categoria = pd.read_sql_query("""
-SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
-   FROM Pedidos P
-   JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
-   JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
-   GROUP BY Mes, Pr.Categoria
-   ORDER BY Mes, Pr.Categoria
+variacao_vendas_por_categoria = pd.read_sql_query("""
+   SELECT Mes, Categoria, SUM(Total_Vendas) AS Total_Vendas
+   FROM (
+       SELECT strftime('%m', P.Data_Pedido) AS Mes, Pr.Categoria, SUM(DP.Quantidade) AS Total_Vendas
+       FROM Pedidos P
+       JOIN Detalhes_Pedido DP ON P.ID_Pedido = DP.ID_Pedido
+       JOIN Produtos Pr ON DP.ID_Produto = Pr.ID_Produto
+       GROUP BY Mes, Pr.Categoria
+   ) AS Vendas_por_Mes
+   GROUP BY Categoria
+   ORDER BY ABS(MAX(Total_Vendas) - MIN(Total_Vendas)) DESC
+   LIMIT 1
 """, conn)
 
 print("Vendas por categoria:\n", vendas_por_categoria)
 print("Correlação entre o país do cliente e a categoria de produto comprada:\n",correlacao_pais_categoria)
 print("Valor médio do pedido varia por mês:\n", valor_medio_por_mes)
 print("Categoria de produto com maior variação de vendas:\n",vendas_por_categoria )
+
+
 
 conn.close()
