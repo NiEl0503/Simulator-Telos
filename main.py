@@ -290,7 +290,7 @@ variacao_vendas_por_categoria = pd.read_sql_query("""
 print("Vendas por categoria:\n", vendas_por_categoria)
 print("Correlação entre o país do cliente e a categoria de produto comprada:\n",correlacao_pais_categoria)
 print("Valor médio do pedido varia por mês:\n", valor_medio_por_mes)
-print("Categoria de produto com maior variação de vendas:\n",vendas_por_categoria )
+print("Categoria de produto com maior variação de vendas:\n",variacao_vendas_por_categoria)
 
 
 
