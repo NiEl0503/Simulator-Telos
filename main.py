@@ -124,10 +124,10 @@ dados_detalhes_pedido = [
    (520, 104, 3)
 ]
 
-c.executemany("INSERT INTO Clientes (ID_Cliente, Nome, Pais) VALUES (?, ?, ?)", dados_clientes)
-c.executemany("INSERT INTO Produtos (ID_Produto, Nome_Produto, Categoria, Preco) VALUES (?, ?, ?, ?)", dados_produtos)
-c.executemany("INSERT INTO Pedidos (ID_Pedido, ID_Cliente, Data_Pedido) VALUES (?, ?, ?)", dados_pedidos)
-c.executemany("INSERT INTO Detalhes_Pedido (ID_Pedido, ID_Produto, Quantidade) VALUES (?, ?, ?)", dados_detalhes_pedido)
+# c.executemany("INSERT INTO Clientes (ID_Cliente, Nome, Pais) VALUES (?, ?, ?)", dados_clientes)
+# c.executemany("INSERT INTO Produtos (ID_Produto, Nome_Produto, Categoria, Preco) VALUES (?, ?, ?, ?)", dados_produtos)
+# c.executemany("INSERT INTO Pedidos (ID_Pedido, ID_Cliente, Data_Pedido) VALUES (?, ?, ?)", dados_pedidos)
+# c.executemany("INSERT INTO Detalhes_Pedido (ID_Pedido, ID_Produto, Quantidade) VALUES (?, ?, ?)", dados_detalhes_pedido)
 
 conn.commit()
 
@@ -152,11 +152,12 @@ print("Os 3 principais clientes em termos de valor total de pedidos:\n", top_cli
 #Análise de Produtos
 # a. Quais são as top 5 categorias de produtos mais vendidas?
 top_categorias = pd.read_sql_query("""
-   SELECT Categoria, COUNT(*) as Num_Vendas 
-   FROM Produtos 
-   GROUP BY Categoria 
-   ORDER BY Num_Vendas DESC 
-   LIMIT 5
+   SELECT Categoria, SUM(Quantidade) AS Total_Vendas
+FROM Produtos
+JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+GROUP BY Categoria
+ORDER BY Total_Vendas DESC
+LIMIT 5;
    """, conn)
 
 # b. Qual é o produto mais caro que foi vendido?
@@ -181,12 +182,13 @@ categoria_maior_receita = pd.read_sql_query("""
 
 # d. Quais são os top 3 produtos mais vendidos?
 top_produtos_vendidos = pd.read_sql_query("""
-    SELECT Nome_Produto, COUNT(*) as Num_Vendas
-    FROM Produtos
-    JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
-    GROUP BY Produtos.ID_Produto
-    ORDER BY Num_Vendas DESC
-    LIMIT 3
+    SELECT Nome_Produto, SUM(Quantidade) AS Total_Vendas
+FROM Produtos
+JOIN Detalhes_Pedido ON Produtos.ID_Produto = Detalhes_Pedido.ID_Produto
+GROUP BY Produtos.ID_Produto
+ORDER BY Total_Vendas DESC
+LIMIT 3;
+
     """, conn)
 
 print("As top 5 categorias de produtos mais vendidas:\n", top_categorias)
